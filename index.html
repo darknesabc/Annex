@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>러셀 이동일지 및 교육점수 작성</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
+
+    <style>
+        body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; text-align: center; margin: 20px; background-color: #f4f7f6; }
+        h1 { color: #336699; font-size: 24px; }
+        form { display: inline-block; text-align: left; border: 1px solid #e0e0e0; padding: 25px; width: 100%; max-width: 500px; box-sizing: border-box; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #333; }
+        /* 기존 스타일에서 이 부분을 수정하세요 */
+select, textarea { 
+    width: 100%; 
+    padding: 18px; /* 12px -> 18px로 대폭 확대 (터치 영역 확보) */
+    margin-bottom: 20px; /* 요소 간 간격 넓힘 */
+    box-sizing: border-box; 
+    font-size: 18px; /* 16px -> 18px로 확대 */
+    border-radius: 8px; /* 좀 더 부드러운 느낌 */
+    border: 1px solid #ccc; 
+    background-color: #fafafa;
+    
+    /* 아이폰/아이패드 브라우저의 기본 화살표 스타일 제거 및 깔끔한 화살표 추가 */
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23336699%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 18px;
+}
+        select:focus, textarea:focus { outline: none; border-color: #336699; background-color: #fff; }
+        /* 수정된 부분: 패딩(두께)과 폰트 크기를 키웠습니다. */
+button { 
+    padding: 18px 20px;       /* 12px -> 18px (버튼이 더 두툼해집니다) */
+    background-color: #336699; 
+    color: #fff; 
+    font-weight: bold; 
+    font-size: 20px;          /* 16px -> 20px (글자가 더 잘 보입니다) */
+    border: none; 
+    cursor: pointer; 
+    width: 100%; 
+    border-radius: 8px;       /* 6px -> 8px (입력창과 통일감) */
+    transition: background-color 0.2s; 
+}
+        button:hover { background-color: #28597b; }
+        #resetButton { margin: 10px 0 20px 0; float: left; width: auto; padding: 8px 16px; background-color: #999; cursor: pointer; border-radius: 6px; font-size: 14px; }
+        #resetButton:hover { background-color: #777; }
+        
+        table { margin: 20px auto; border-collapse: collapse; width: 100%; max-width: 800px; border-radius: 8px; overflow: hidden; background-color: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        th, td { border: 1px solid #eee; padding: 12px; text-align: center; }
+        thead { background-color: #336699; color: white; font-weight: bold; }
+        tbody tr:nth-child(even) { background-color: #f9f9f9; }
+        tbody tr:hover { background-color: #f1f5f9; }
+        
+        .error { color: red; margin-top: 10px; display: none; font-weight: bold; font-size: 14px; }
+        .score { display: none; }
+
+        /* 이 코드를 <style> 태그 안 아무 곳에나 추가하세요 */
+#seatNumber, #seatNumber2 {
+    flex: 1; 
+    height: 60px; /* 위에서 설정한 select 박스 높이와 비슷하게 맞춤 */
+    margin-bottom: 0;
+}
+
+        /* 팝업 관련 CSS */
+        .popup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 500px; background-color: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); z-index: 1000; padding: 25px; box-sizing: border-box; }
+        .popup-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 999; }
+        .popup-content { text-align: center; }
+        .popup h2 { margin-top: 0; margin-bottom: 10px; color: #336699; }
+        .popup-buttons { margin-top: 20px; display: flex; justify-content: center; gap: 10px; }
+        .popup button { width: auto; min-width: 100px; }
+        .cancel-btn { background-color: #aaa !important; }
+        .cancel-btn:hover { background-color: #888 !important; }
+
+        .time-btn { padding: 10px 15px; border: 1px solid #ccc; border-radius: 6px; background: #fff; cursor: pointer; color: #333; font-weight: bold; transition: 0.2s; min-width: 80px; }
+        .time-btn:hover { border-color: #336699; background: #e3effa; transform: translateY(-2px); }
+        .time-btn.selected { background: #336699; color: white; border-color: #1a3a5c; }
+
+        #finalConfirmPopup { max-width: 400px; z-index: 1100; border-top: 5px solid #336699; }
+        .confirm-info-box { text-align: left; background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0; border: 1px solid #eee; }
+        .confirm-info-box p { margin: 8px 0; font-size: 15px; }
+
+        @media (max-width: 768px) {
+            form { padding: 15px; }
+            button { width: 100%; }
+            table, th, td { font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+    <h1>러셀 이동일지&교육점수 작성</h1>
+    <button id="resetButton" onclick="resetTable()">테이블 초기화</button>
+
+    <form id="moveForm">
+        <label for="building">관 (본인):</label>
+        <select id="building" required>
+            <option value="">선택하세요</option>
+            <option value="601호">601호</option>
+            <option value="602호">602호</option>
+        </select>
+
+        <label for="seatNumber">좌석번호 (본인):</label>
+        <div style="display: flex; gap: 10px;">
+            <select id="seatNumber" required style="margin-bottom: 0;">
+                <option value="">알파벳</option>
+                <optgroup label="A~K">
+                    <option value="A">A</option><option value="B">B</option><option value="C">C</option>
+                    <option value="D">D</option><option value="F">F</option><option value="G">G</option>
+                    <option value="H">H</option><option value="I">I</option>
+                </optgroup>
+            </select>
+            <select id="seatNumber2" required style="margin-bottom: 0;">
+                <option value="">번호</option>
+                <optgroup label="1~11">
+                    <option value="01">01</option><option value="02">02</option><option value="03">03</option>
+                    <option value="04">04</option><option value="05">05</option><option value="06">06</option>
+                    <option value="07">07</option><option value="08">08</option><option value="09">09</option>
+                    <option value="10">10</option><option value="11">11</option>
+                </optgroup>
+            </select>
+        </div>
+        <div style="margin-bottom: 15px;"></div>
+
+        <label for="reason">이동사유:</label>
+        <select id="reason" required>
+            <option value="">선택하세요</option>
+            <optgroup label="담임 상담">
+                <option value="상담 신청">상담 신청</option>
+                <option value="상담 취소">상담 취소</option>
+            </optgroup>
+            <optgroup label="일반 이동">
+                <option value="화장실/정수기">화장실/정수기</option>
+                <option value="대기자습실 이동">대기자습실 이동</option>
+                <option value="튜터 질의응답">튜터 질의응답</option>
+                <option value="외부 학원/과외/보충">외부 학원/과외/보충</option>
+                <option value="내부 학원/보충">내부 학원/보충</option>
+                <option value="자료수령">자료수령</option>
+                <option value="가족 행사">가족 행사</option>
+                <option value="병원">병원</option>
+                <option value="식사">식사</option>
+                <option value="기타">기타</option>
+                <option value="조퇴(컨디션난조)">조퇴(컨디션난조)</option>
+            </optgroup>
+            <optgroup label="규정 위반/지도">
+                <option value="지각">지각</option>
+                <option value="자습 중 이동 태블릿 미입력">자습 중 이동 태블릿 미입력</option>
+                <option value="입/퇴실 미준수">입/퇴실 미준수</option>
+                <option value="취침강제하원(7회)">취침강제하원(7회)</option>
+                <option value="음식물섭취">음식물섭취</option>
+                <option value="무단지각">무단지각</option>
+                <option value="원내대화">원내대화</option>
+                <option value="타층/타관 무단출입">타층/타관 무단출입</option>
+                <option value="모의고사 무단 1회 미응시">모의고사 무단 1회 미응시</option>
+                <option value="무단이탈">무단이탈</option>
+                <option value="무단결석">무단결석</option>
+                <option value="핸드폰 미제출">핸드폰 미제출</option>
+                <option value="핸드폰 무단사용">핸드폰 무단사용</option>
+                <option value="전자기기 부정사용">전자기기 부정사용</option>
+            </optgroup>
+        </select>
+
+        <label for="returnTime">복귀교시:</label>
+        <select id="returnTime" required>
+            <option value="">사유를 먼저 선택하세요</option>
+        </select>
+
+        <div id="scoreDiv" class="score">
+            <label for="score">점수 (1~10점):</label>
+            <select id="score">
+                <option value="1">1점</option><option value="2">2점</option>
+                <option value="3">3점</option><option value="4">4점</option>
+                <option value="5">5점</option><option value="6">6점</option>
+                <option value="7">7점</option><option value="8">8점</option>
+                <option value="9">9점</option><option value="10">10점</option>
+            </select>
+        </div>
+
+        <label for="otherReason" id="otherReasonLabel" style="display:none;">기타 사유:</label>
+        <textarea id="otherReason" placeholder="기타 사유를 입력하세요" style="display:none; height: 80px;"></textarea>
+        <div class="error" id="errorMessage">기타 사유를 입력해주세요.</div>
+
+        <button type="submit" style="margin-top: 10px;">제출</button>
+    </form>
+
+    <div id="result">
+        <table id="moveList">
+            <thead>
+                <tr>
+                    <th>관</th><th>좌석번호</th><th>이동사유</th><th>복귀교시</th><th>날짜</th><th>시간</th><th>점수</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div id="popupOverlay" class="popup-overlay"></div>
+
+    <div id="counselingPopup" class="popup">
+        <div class="popup-content">
+            <h2 id="counselingPopupTitle">👨‍🏫 담임 선생님 상담</h2>
+            <p style="margin-bottom: 15px; font-size: 15px;">담임 선생님: <span id="counselingTeacherName" style="font-weight:bold; color:#336699;"></span></p>
+            
+            <div style="background-color: #f1f5f9; padding: 15px; border-radius: 8px; text-align: left; margin-bottom: 15px;">
+                <label for="counselingDateSelect" style="display:inline-block; font-weight:bold; margin-right:10px;">📅 날짜 선택:</label>
+                <input type="text" id="counselingDateSelect" placeholder="달력에서 날짜를 선택하세요" style="width: 200px; padding: 8px; display: inline-block; border-radius:4px; border:1px solid #ccc; background-color:#fff; cursor:pointer;" readonly>
+            </div>
+
+            <div id="counselingTimeContainer" style="display:none; text-align:left; padding: 10px 0;">
+                <p style="font-weight:bold; margin-bottom:10px;">⏰ 시간 선택</p>
+                <div id="counselingTimeGrid" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+            </div>
+
+            <p id="selectedTimeText" style="margin-top: 15px; font-weight:bold; color:#d9534f;">달력에서 날짜를 먼저 선택해주세요.</p>
+            <div class="popup-buttons">
+                <button id="counselingSubmitButton">최종 제출</button>
+                <button id="counselingCancelButton" class="cancel-btn">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="finalConfirmPopup" class="popup">
+        <div class="popup-content">
+            <h2 id="confirmReasonTitle">📝 최종 확인</h2>
+            <div class="confirm-info-box">
+                <p>📍 <b>본인 좌석:</b> <span id="c_origSeat"></span></p>
+                <p>🚀 <b>이동/대상:</b> <span id="c_targetSeat"></span></p>
+                <p>⏰ <b>이용 교시/시간:</b> <span id="c_returnTime"></span></p>
+            </div>
+            <p style="color:#d9534f; font-weight:bold;">위 내용이 정확합니까?</p>
+            <div class="popup-buttons">
+                <button id="finalYesButton" style="background-color: #274e13;">네, 신청합니다</button>
+                <button id="finalNoButton" class="cancel-btn">아니오</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    let moveList = [];
+    let selectedTargetSeat = ""; 
+    let selectedCounselingDate = ""; 
+    let selectedCounselingTime = ""; 
+    let isCounselingCancel = false;  
+    let globalScheduleData = null;   
+    let fpInstance = null; 
+    let currentColToDateMap = {}; 
+    let studentNameMap = {}, studentTeacherMap = {}; 
+
+    // 🚨 이전 채팅에서 통합해 드린 최신 Google Apps Script 웹앱 URL을 입력하세요.
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbweMdFCWY9W25m_smk_aS2asftPSCcys948Gq8xQ4WcDwYa5HFeyK6CIIVYthko0ZBzPQ/exec";
+
+    // ✅ 기존 코드의 규정 위반 점수 체계 유지
+    const fixedScores = {
+        "지각": 1, 
+        "자습 중 이동 태블릿 미입력": 1,
+        "입/퇴실 미준수": 3, 
+        "음식물섭취": 3, 
+        "취침강제하원(7회)": 3,
+        "무단지각": 5, 
+        "타층/타관 무단출입": 5, 
+        "원내대화": 5, 
+        "모의고사 무단 1회 미응시": 5,
+        "무단이탈": 7, 
+        "무단결석": 7, 
+        "핸드폰 미제출": 7, 
+        "핸드폰 무단사용": 7,
+        "전자기기 부정사용": 10
+    };
+    const scoreReasons = Object.keys(fixedScores);
+
+    // 자동 자정 새로고침
+    function refreshAtMidnight() {
+        const now = new Date();
+const kstString = now.toLocaleString("en-US", { timeZone: "Asia/Seoul" });
+const kstNow = new Date(kstString);
+
+const midnight = new Date(kstNow);
+        midnight.setHours(24, 0, 0, 0);
+        const timeToMidnight = midnight.getTime() - kstNow.getTime();
+        setTimeout(function() { location.reload(); }, timeToMidnight);
+    }
+
+    // 초기 로드 시 학생/선생님 정보 가져오기
+    window.onload = function() {
+        refreshAtMidnight();
+        fetch(SCRIPT_URL + "?action=getGenderMap&t=" + new Date().getTime())
+            .then(res => res.json())
+            .then(data => {
+                studentNameMap = data.nameMap || {};
+                studentTeacherMap = data.teacherMap || {}; 
+                resetReturnTimeOptions();
+            }).catch(err => console.error("통신 오류"));
+    };
+
+    const returnTimeSelect = document.getElementById("returnTime");
+
+    function resetReturnTimeOptions() {
+        returnTimeSelect.innerHTML = `
+            <option value="">선택하세요</option>
+            <option value="1">1교시</option><option value="2">2교시</option>
+            <option value="3">3교시</option><option value="4">4교시</option>
+            <option value="5">5교시</option><option value="6">6교시</option>
+            <option value="7">7교시</option><option value="8">8교시</option>
+            <option value="복귀안함">복귀안함</option>`;
+    }
+
+    // 이동사유 선택 시 로직
+    document.getElementById("reason").addEventListener("change", function() {
+        const val = this.value; 
+
+        if (val.includes("상담")) {
+            returnTimeSelect.innerHTML = `<option value="상담시간선택">시간 선택 팝업에서 진행</option>`;
+        } else {
+            resetReturnTimeOptions();
+        }
+
+        const isScoreReason = scoreReasons.includes(val);
+        document.getElementById("scoreDiv").style.display = isScoreReason ? "block" : "none";
+        
+        if (val === "기타") {
+            document.getElementById("otherReason").style.display = "block";
+            document.getElementById("otherReasonLabel").style.display = "block";
+            document.getElementById("errorMessage").style.display = "none";
+        } else {
+            document.getElementById("otherReason").style.display = "none";
+            document.getElementById("otherReasonLabel").style.display = "none";
+            document.getElementById("errorMessage").style.display = "none";
+        }
+
+        if (fixedScores[val]) {
+            document.getElementById("score").value = fixedScores[val];
+        }
+    });
+
+    // 폼 제출 시 로직
+    document.getElementById("moveForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        
+        const b = document.getElementById("building").value; 
+        const s1 = document.getElementById("seatNumber").value; 
+        const s2 = document.getElementById("seatNumber2").value;
+        const ret = document.getElementById("returnTime").value; 
+        const reas = document.getElementById("reason").value;
+        const otherReason = document.getElementById("otherReason").value;
+        const key = b.replace("관", "").trim() + s1 + s2;
+
+        // 🚨 [추가된 로직] 빈 좌석(오입력) 검증
+        // studentNameMap 데이터가 로드되었음에도 불구하고 해당 key(좌석)에 매칭되는 이름이 없다면 제출 차단
+        if (Object.keys(studentNameMap).length > 0 && !studentNameMap[key]) {
+            alert(`선택하신 좌석(${b} ${s1}${s2})에 등록된 학생 정보가 없습니다.\n본인 좌석 번호가 맞는지 다시 확인해주세요!`);
+            return; // 여기서 함수를 종료하여 제출을 막음
+        }
+
+        if (reas === "기타" && !otherReason.trim()) {
+            document.getElementById("errorMessage").style.display = "block";
+            return;
+        }
+
+        if (reas.includes("상담")) {
+            const teacherName = studentTeacherMap[key];
+            if (!teacherName) { alert("해당 좌석의 담임 선생님 정보를 찾을 수 없습니다."); return; }
+            openCounselingPopup(teacherName, reas === "상담 취소");
+        } else {
+            const score = scoreReasons.includes(reas) ? parseInt(document.getElementById("score").value) : null;
+            submitMoveData(b, s1+s2, ret, reas, otherReason, score, "", "");
+        }
+    });
+
+    // 상담 팝업 열기
+    function openCounselingPopup(teacherName, isCancel) {
+        isCounselingCancel = isCancel;
+        document.getElementById("counselingPopupTitle").textContent = isCancel ? "👨‍🏫 담임 선생님 상담 취소" : "👨‍🏫 담임 선생님 상담 신청";
+        document.getElementById("counselingTeacherName").textContent = teacherName;
+        const dateInput = document.getElementById("counselingDateSelect");
+        dateInput.value = ""; dateInput.placeholder = "데이터 불러오는 중..."; dateInput.disabled = true;
+        document.getElementById("counselingTimeContainer").style.display = "none";
+        document.getElementById("popupOverlay").style.display = "block";
+        document.getElementById("counselingPopup").style.display = "block";
+        
+        fetch(`${SCRIPT_URL}?action=getTeacherSchedule&teacherName=${encodeURIComponent(teacherName)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) throw new Error(data.error);
+                globalScheduleData = data; 
+                initFlatpickr(data); 
+            }).catch(err => { 
+                alert("시간표 로드 실패: " + err.message); 
+                document.getElementById("counselingPopup").style.display = "none"; 
+                document.getElementById("popupOverlay").style.display = "none"; 
+            });
+    }
+
+    // flatpickr(달력) 초기화
+    function initFlatpickr(data) {
+        const b = document.getElementById("building").value;
+        const s1 = document.getElementById("seatNumber").value;
+        const s2 = document.getElementById("seatNumber2").value;
+        const key = b.replace("관", "").trim() + s1 + s2;
+        const targetString = `상담(${key})`; 
+        
+        let availableDates = []; 
+        currentColToDateMap = {};
+        const dates = data[1].slice(1);
+
+        dates.forEach((d, index) => {
+            const colIdx = index + 1;
+            let dateStr = (typeof d === 'string') ? d.split(" ")[0] : String(d).split("T")[0];
+            currentColToDateMap[dateStr] = colIdx;
+
+            let hasSlots = false;
+            for (let r = 2; r < data.length; r++) {
+                const cellValue = String(data[r][colIdx]).trim();
+                if (isCounselingCancel) {
+                    if (cellValue.includes(targetString)) hasSlots = true; 
+                } else {
+                    if (cellValue === "") hasSlots = true;
+                }
+            }
+            if (hasSlots) availableDates.push(dateStr); 
+        });
+
+        const dateInput = document.getElementById("counselingDateSelect");
+        if (fpInstance) fpInstance.destroy(); 
+        
+        if (availableDates.length === 0) { 
+            dateInput.placeholder = isCounselingCancel ? "취소할 상담 내역이 없습니다." : "신청 가능한 날짜가 없습니다."; 
+            dateInput.disabled = true; return; 
+        }
+        dateInput.placeholder = "여기를 클릭하여 달력을 여세요"; 
+        dateInput.disabled = false;
+        
+        fpInstance = flatpickr("#counselingDateSelect", { 
+            locale: "ko", 
+            enable: availableDates, 
+            dateFormat: "Y-m-d", 
+            disableMobile: "true", 
+            onChange: function(selectedDates, dateStr) { renderTimeSlots(currentColToDateMap[dateStr], dateStr); } 
+        });
+    }
+
+    // 상담 시간 버튼 렌더링
+    function renderTimeSlots(colIdx, dateStr) {
+        selectedCounselingDate = dateStr; 
+        selectedCounselingTime = "";
+        const timeGrid = document.getElementById("counselingTimeGrid"); 
+        timeGrid.innerHTML = "";
+        
+        const b = document.getElementById("building").value;
+        const s1 = document.getElementById("seatNumber").value;
+        const s2 = document.getElementById("seatNumber2").value;
+        const key = b.replace("관", "").trim() + s1 + s2;
+        const targetString = `상담(${key})`;
+
+        document.getElementById("counselingTimeContainer").style.display = "block";
+        document.getElementById("selectedTimeText").textContent = "시간을 선택해주세요.";
+
+        for (let r = 2; r < globalScheduleData.length; r++) {
+            const timeLabelFull = String(globalScheduleData[r][0]).trim();
+            const startTime = timeLabelFull.split("~")[0].trim();
+            const cellValue = String(globalScheduleData[r][colIdx]).trim();
+            let canShow = false;
+            
+            if (isCounselingCancel) {
+                if (cellValue.includes(targetString)) canShow = true;
+            } else {
+                if (cellValue === "") canShow = true;
+            }
+
+            if (canShow) {
+                const btn = document.createElement("button"); 
+                btn.className = "time-btn"; btn.type = "button"; btn.textContent = startTime;
+                btn.onclick = function() { 
+                    Array.from(timeGrid.children).forEach(child => child.classList.remove("selected")); 
+                    this.classList.add("selected"); 
+                    selectedCounselingTime = startTime; 
+                    document.getElementById("selectedTimeText").innerHTML = `✅ 선택 일시: ${selectedCounselingDate} ${selectedCounselingTime}`; 
+                };
+                timeGrid.appendChild(btn);
+            }
+        }
+    }
+
+    // 상담 팝업 -> 제출 확인으로
+    document.getElementById("counselingSubmitButton").onclick = function() {
+        if (!selectedCounselingTime) { alert("상담 시간을 선택해주세요!"); return; }
+        const b = document.getElementById("building").value;
+        const s = document.getElementById("seatNumber").value + document.getElementById("seatNumber2").value;
+        const teacher = document.getElementById("counselingTeacherName").textContent;
+        
+        document.getElementById("c_origSeat").textContent = `${b} ${s}`;
+        document.getElementById("c_targetSeat").textContent = teacher + " 선생님";
+        document.getElementById("c_returnTime").textContent = `${selectedCounselingDate} ${selectedCounselingTime}`;
+        document.getElementById("confirmReasonTitle").textContent = `[${isCounselingCancel ? '상담 취소' : '상담 신청'}] 최종 확인`;
+        document.getElementById("counselingPopup").style.display = "none";
+        document.getElementById("finalConfirmPopup").style.display = "block";
+        selectedTargetSeat = teacher; 
+    };
+
+    // 데이터 최종 전송
+    function submitMoveData(bld, sNum, ret, reas, other, score, target, cDate) {
+        const now = new Date();
+
+const date = now.toLocaleDateString('sv-SE', {
+    timeZone: 'Asia/Seoul'
+}); 
+
+const time = now.toLocaleTimeString('ko-KR', {
+    hour12: false,
+    timeZone: 'Asia/Seoul'
+});
+        
+        const cleanR = reas === "기타" ? other : reas;
+        const key = bld.replace("관", "").trim() + sNum;
+        const studentName = studentNameMap[key] || "미확인";
+        
+        const data = { 
+            building: bld, seatNumber: sNum, returnTime: ret, reason: cleanR, 
+            score: score, inputDate: date, inputTime: time, targetSeat: target, 
+            studentName: studentName, counselingDate: cDate 
+        };
+        
+        const displayReason = reas.includes("상담") ? `${cleanR} ➡️ ${target} ${cDate?'('+cDate.slice(-5)+')':''}` : cleanR;
+        
+        moveList.unshift({ ...data, displayReason: displayReason }); 
+        refreshMoveList();
+        
+        document.getElementById("moveForm").reset(); 
+        document.getElementById("scoreDiv").style.display = "none"; 
+        document.getElementById("otherReason").style.display = "none";
+        document.getElementById("otherReasonLabel").style.display = "none";
+        resetReturnTimeOptions();
+        
+        fetch(SCRIPT_URL, { 
+            method: 'POST', 
+            mode: 'no-cors',
+            body: JSON.stringify(data) 
+        }).catch(err => console.error("전송 에러"));
+    }
+
+    // 최종 확인 팝업 '네' 버튼
+    document.getElementById("finalYesButton").onclick = function() {
+        const b = document.getElementById("building").value; 
+        const s = document.getElementById("seatNumber").value + document.getElementById("seatNumber2").value;
+        const reas = document.getElementById("reason").value;
+        const time = reas.includes("상담") ? selectedCounselingTime : document.getElementById("returnTime").value;
+        
+        submitMoveData(b, s, time, reas, "", null, selectedTargetSeat, reas.includes("상담") ? selectedCounselingDate : "");
+        
+        document.getElementById("finalConfirmPopup").style.display = "none"; 
+        document.getElementById("popupOverlay").style.display = "none";
+    };
+
+    // 최종 확인 팝업 '아니오' 버튼 및 취소
+    document.getElementById("finalNoButton").onclick = function() { 
+        document.getElementById("finalConfirmPopup").style.display = "none"; 
+        document.getElementById("counselingPopup").style.display = "block"; 
+    };
+    document.getElementById("counselingCancelButton").onclick = () => { 
+        document.getElementById("counselingPopup").style.display = "none"; 
+        document.getElementById("popupOverlay").style.display = "none"; 
+    };
+    
+    // 테이블 새로고침
+    function refreshMoveList() {
+        const tbody = document.querySelector("#moveList tbody"); tbody.innerHTML = "";
+        moveList.forEach(m => { 
+            const r = document.createElement("tr"); 
+            r.innerHTML = `<td>${m.building}</td><td>${m.seatNumber}</td><td>${m.displayReason}</td><td>${m.returnTime}${m.reason.includes('상담')?'':'교시'}</td><td>${m.inputDate}</td><td>${m.inputTime}</td><td>${m.score || m.targetSeat || '-'}</td>`; 
+            tbody.appendChild(r); 
+        });
+    }
+
+    function resetTable() { moveList = []; refreshMoveList(); }
+    </script>
+</body>
+</html>
+
