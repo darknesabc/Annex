@@ -100,8 +100,8 @@ button {
         <label for="building">관 (본인):</label>
         <select id="building" required>
             <option value="">선택하세요</option>
-            <option value="601호">601호</option>
-            <option value="602호">602호</option>
+            <option value="601관">601</option>
+            <option value="602관">602</option>
         </select>
 
         <label for="seatNumber">좌석번호 (본인):</label>
@@ -346,7 +346,7 @@ const midnight = new Date(kstNow);
         const ret = document.getElementById("returnTime").value; 
         const reas = document.getElementById("reason").value;
         const otherReason = document.getElementById("otherReason").value;
-        const key = b.replace("", "").trim() + "-" + s1 + s2; // 하이픈(-) 추가
+        const key = b.replace("관", "").trim() + "-" + s1 + s2; // 하이픈(-) 추가
 
         // 🚨 [추가된 로직] 빈 좌석(오입력) 검증
         // studentNameMap 데이터가 로드되었음에도 불구하고 해당 key(좌석)에 매칭되는 이름이 없다면 제출 차단
@@ -399,7 +399,7 @@ const midnight = new Date(kstNow);
         const b = document.getElementById("building").value;
         const s1 = document.getElementById("seatNumber").value;
         const s2 = document.getElementById("seatNumber2").value;
-        const key = b.replace("", "").trim() + "-" + s1 + s2;
+        const key = b.replace("관", "").trim() + "-" + s1 + s2;
         const targetString = `상담(${key})`; 
         
         let availableDates = []; 
@@ -452,7 +452,7 @@ const midnight = new Date(kstNow);
         const b = document.getElementById("building").value;
         const s1 = document.getElementById("seatNumber").value;
         const s2 = document.getElementById("seatNumber2").value;
-        const key = b.replace("", "").trim() + "-" + s1 + s2;
+        const key = b.replace("관", "").trim() + "-" + s1 + s2;
         const targetString = `상담(${key})`;
 
         document.getElementById("counselingTimeContainer").style.display = "block";
@@ -514,7 +514,7 @@ const time = now.toLocaleTimeString('ko-KR', {
 });
         
         const cleanR = reas === "기타" ? other : reas;
-        const key = bld.replace("호", "").trim() + "-" + sNum;
+        const key = bld.replace("관", "").trim() + "-" + sNum;
         const studentName = studentNameMap[key] || "미확인";
         
         const data = { 
